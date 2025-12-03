@@ -1,33 +1,55 @@
-int pirPin = 2;        // PIR sensor
-int ldrPin = A0;       // Light sensor
-int tempPin = A1;      // Temperature sensor (LM35)
-int ledPin = 13;       // LED indicator
+#include <DHT.h>
+
+#define DHTPIN 2
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+int irPin = 3;
+int ldrPin = A0;
+int acPin = 4;
+int lightPin = 5;
 
 void setup() {
-  pinMode(pirPin, INPUT);
-  pinMode(ledPin, OUTPUT);
+  pinMode(irPin, INPUT);
+  pinMode(acPin, OUTPUT);
+  pinMode(lightPin, OUTPUT);
+  dht.begin();
   Serial.begin(9600);
 }
 
 void loop() {
-  int motion = digitalRead(pirPin);
-  int light = analogRead(ldrPin);
-  int tempVal = analogRead(tempPin);
+  int irState = digitalRead(irPin);    
+  int ldrValue = analogRead(ldrPin);  
+  float temp = dht.readTemperature();  
 
-  float temperature = (tempVal / 1023.0) * 500;  // LM35 approx convert
+  Serial.print("Temp: "); Serial.print(temp);
+  Serial.print(" C | IR: "); Serial.print(irState);
+  Serial.print(" | LDR: "); Serial.println(ldrValue);
 
-  Serial.print("Motion: ");
-  Serial.print(motion);
-  Serial.print(" | Light: ");
-  Serial.print(light);
-  Serial.print(" | Temp(C): ");
-  Serial.println(temperature);
+  if (irState == HIGH) { // Person detected
+    // Light control
+    if (ldrValue < 500) {
+      digitalWrite(lightPin, HIGH);
+      Serial.println("Room Light ON");
+    } else {
+      digitalWrite(lightPin, LOW);
+      Serial.println("Room Light OFF");
+    }
 
-  if (motion == HIGH) {
-    digitalWrite(ledPin, HIGH);
-  } else {
-    digitalWrite(ledPin, LOW);
+    // AC control
+    if (temp > 25) {
+      digitalWrite(acPin, HIGH);
+      Serial.println("AC ON");
+    } else {
+      digitalWrite(acPin, LOW);
+      Serial.println("AC OFF");
+    }
+
+  } else { // No person
+    digitalWrite(lightPin, LOW);
+    digitalWrite(acPin, LOW);
+    Serial.println("Room Empty → AC and Light OFF");
   }
 
-  delay(300);
+  delay(1000);
 }
