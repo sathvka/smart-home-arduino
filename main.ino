@@ -50,6 +50,6 @@ void loop() {
     digitalWrite(acPin, LOW);
     Serial.println("Room Empty → AC and Light OFF");
   }
-
+//setting delay for led
   delay(1000);
 }
